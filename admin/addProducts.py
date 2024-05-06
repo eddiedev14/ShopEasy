@@ -1,7 +1,8 @@
-import os
 from pathlib import Path
+import os, sys, subprocess, sqlite3
+from tkinter import filedialog
+from tkinter import messagebox as mb
 from tkinter import Tk, Canvas, Entry, Text, Button, PhotoImage
-
 # Obtenemos la ruta del archivo actual
 CURRENT_DIR = Path(__file__).resolve().parent
 
@@ -10,10 +11,119 @@ RELATIVE_PATH = Path("../assets/addProducts")
 
 # Combinamos la ruta actual con la parte relativa para obtener la ruta absoluta
 ASSETS_PATH = CURRENT_DIR / RELATIVE_PATH
+# Get the login path.
+LOGIN_PATH = CURRENT_DIR / ("../login/adminLogin.py")
+
+# Obtener la ruta del directorio actual del script para abrir los demás archivos
+script_dir = os.path.dirname(__file__)
 
 def relative_to_assets(path: str) -> Path:
     # Combinamos la ruta de los assets con la ruta proporcionada
     return ASSETS_PATH / Path(path)
+# Commands for the options and buttons.
+def menu():
+    # Construir la ruta al archivo addProducts.py
+    admin_dashboard_path = os.path.join(script_dir, "adminDashboard.py")
+    subprocess.Popen(['python', admin_dashboard_path])
+    sys.exit(0)
+def addProducts():
+    # Construir la ruta al archivo addProducts.py
+    path = os.path.join(script_dir, "addProducts.py")
+    subprocess.Popen(['python', path])
+    sys.exit(0)
+def deleteProducts():
+    # Construir la ruta al archivo deleteProducts.py
+    path = os.path.join(script_dir, "deleteProducts.py")
+    subprocess.Popen(['python', path])
+    sys.exit(0)
+def editProducts():
+    # Construir la ruta al archivo editProducts.py
+    path = os.path.join(script_dir, "editProducts.py")
+    subprocess.Popen(['python', path])
+    sys.exit(0)
+def productsList():
+    # Construir la ruta al archivo productsList.py
+    path = os.path.join(script_dir, "productsList.py")
+    subprocess.Popen(['python', path])
+    sys.exit(0)
+def salesList():
+    # Construir la ruta al archivo salesList.py
+    path = os.path.join(script_dir, "salesList.py")
+    subprocess.Popen(['python', path])
+    sys.exit(0)
+def signOff():
+    # Make the path for the file adminLogin.py.
+    path = LOGIN_PATH
+    subprocess.Popen(['python', path])
+    sys.exit(0)
+def uploadProctImage():
+    print("Upload_Product_Image clicked")
+    # Open file dialog to select image file
+    uploadProctImage = filedialog.askopenfilename(title="Select Image File", filetypes=(("PNG files", "*.png"), ("All files", "*.*")))
+    # Check if a file was selected
+    if uploadProctImage:
+        # Validate file extension
+        if uploadProctImage.lower().endswith('.png'):
+            # Proceed with uploading the image to the database
+            print(f"Selected image file: {uploadProctImage}")
+            return uploadProctImage  # Return the file path
+        else:
+            # Display error message for invalid file type
+            print("Error: Invalid file. Please select a .png file.")
+            mb.showerror(title="Error", message="Por favor seleccione un archivo .png")
+    else:
+        print("Error: No file selected.")
+    return None  # Return None if no file selected
+def addProduct():
+    print("Add_Product_Button clicked")
+    # Retrieve information from Entry widgets
+    product_code = entry_1.get().strip()
+    product_category = entry_2.get().strip()
+    product_stock = entry_3.get().strip()
+    product_name = entry_4.get().strip()
+    product_description = entry_5.get().strip()
+    product_price = entry_6.get().strip()
+    product_image = uploadProctImage
+    
+    print (f'entry_1 = {product_code}, entry_2 = {product_category}, entry_3 = {product_stock}, entry_4 = {product_name}, entry_5 = {product_description}, entry_6 = {product_price}.')
+
+    # Validate input data.
+    if not all([product_code, product_category, product_stock, product_name, product_description, product_price]):
+        print("Error: All fields are required.")
+        mb.showerror(title="Ha ocurrido un error", message="Rellana todos los campos del formulario.")
+        return
+    # Validate that image was uploaded.
+    if product_image is None:
+        print("Error: Image wasn't uploaded.")
+        mb.showerror(title="Ha ocurrido un error", message="Por favor suba una imagen para el producto.")
+        return
+
+    # Perform additional validation as needed (e.g., ensuring numerical values for stock and price).
+    try:
+        product_stock = int(product_stock)
+        product_price = float(product_price)
+    except ValueError:
+        print("Error: Stock must be an integer and price must be a number.")
+        mb.showerror(title="Datos invalidos", message="El stock debe ser un numero entero y el precio un numero real.")
+        return
+    # Connect to the database
+    db_path = CURRENT_DIR / ("../shopeasy.db")
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+
+    # Insert the new product into the database
+    try:
+        cursor.execute('''INSERT INTO productos (codigo, nombre, categoria, descripcion, stock, precio, imagen)
+                          VALUES (?, ?, ?, ?, ?, ?)''', 
+                       (product_code, product_name, product_category, product_description, product_stock, product_price, product_image))
+        conn.commit()
+        print("Product added successfully!")
+        mb.showinfo(title="Producto agregado", message="El producto fue agregado exitosamente.")
+    except Exception as e:
+        print(f"Error adding product: {e}")
+        mb.showerror(title="Ha ocurrido un error", message="No ha sido posible añadir el producto.")
+    # Close the database connection
+    conn.close()
 
 window = Tk()
 
@@ -43,15 +153,20 @@ image_1 = canvas.create_image(
     image=image_image_1
 )
 
-canvas.create_text(
-    82.0,
-    110.0,
-    anchor="nw",
+# Create the editproductsOption Button
+editproductsOption = Button(
+    window,
     text="Menu",
-    fill="#347AE2",
-    font=("Poppins Medium", 16 * -1)
+    bg="#FFFFFF",  # Set background color to match window background
+    fg="#347AE2",  # Set text color
+    font=("Poppins Medium", 16 * -1),
+    borderwidth=0,  # Set border width to 0 to remove border
+    highlightthickness=0,  # Set highlight thickness to 0 to remove border highlight
+    command=menu
 )
-
+# Place the deleteproductsOption Button
+editproductsOption.place(x=82, y=110)
+# Option icon.
 image_image_2 = PhotoImage(
     file=relative_to_assets("image_2.png"))
 image_2 = canvas.create_image(
@@ -59,16 +174,20 @@ image_2 = canvas.create_image(
     122.0,
     image=image_image_2
 )
-
-canvas.create_text(
-    82.0,
-    196.0,
-    anchor="nw",
+# Create the editproductsOption Button
+editproductsOption = Button(
+    window,
     text="Editar Productos",
-    fill="#7C8DB5",
-    font=("Poppins Medium", 16 * -1)
+    bg="#FFFFFF",  # Set background color to match window background
+    fg="#7C8DB5",  # Set text color
+    font=("Poppins Medium", 16 * -1),
+    borderwidth=0,  # Set border width to 0 to remove border
+    highlightthickness=0,  # Set highlight thickness to 0 to remove border highlight
+    command=editProducts
 )
-
+# Place the deleteproductsOption Button
+editproductsOption.place(x=82, y=196)
+# Option icon.
 image_image_3 = PhotoImage(
     file=relative_to_assets("image_3.png"))
 image_3 = canvas.create_image(
@@ -76,16 +195,20 @@ image_3 = canvas.create_image(
     207.0,
     image=image_image_3
 )
-
-canvas.create_text(
-    80.0,
-    153.0,
-    anchor="nw",
+# Create the addproductsOption Button
+addproductsOption = Button(
+    window,
     text="Añadir Productos",
-    fill="#7C8DB5",
-    font=("Poppins Medium", 16 * -1)
+    bg="#FFFFFF",  # Set background color to match window background
+    fg="#7C8DB5",  # Set text color
+    font=("Poppins Medium", 16 * -1),
+    borderwidth=0,  # Set border width to 0 to remove border
+    highlightthickness=0,  # Set highlight thickness to 0 to remove border highlight
+    command=addProducts
 )
-
+# Place the addproductsOption Button
+addproductsOption.place(x=80, y=153)
+# Option icon.
 image_image_4 = PhotoImage(
     file=relative_to_assets("image_4.png"))
 image_4 = canvas.create_image(
@@ -93,16 +216,20 @@ image_4 = canvas.create_image(
     165.0,
     image=image_image_4
 )
-
-canvas.create_text(
-    82.0,
-    239.0,
-    anchor="nw",
+# Create the deleteproductsOption Button
+deleteproductsOption = Button(
+    window,
     text="Eliminar Productos",
-    fill="#7C8DB5",
-    font=("Poppins Medium", 16 * -1)
+    bg="#FFFFFF",  # Set background color to match window background
+    fg="#7C8DB5",  # Set text color
+    font=("Poppins Medium", 16 * -1),
+    borderwidth=0,  # Set border width to 0 to remove border
+    highlightthickness=0,  # Set highlight thickness to 0 to remove border highlight
+    command=deleteProducts
 )
-
+# Place the deleteproductsOption Button
+deleteproductsOption.place(x=82, y=239)
+# Option icon.
 image_image_5 = PhotoImage(
     file=relative_to_assets("image_5.png"))
 image_5 = canvas.create_image(
@@ -110,16 +237,20 @@ image_5 = canvas.create_image(
     251.0,
     image=image_image_5
 )
-
-canvas.create_text(
-    82.5,
-    282.0,
-    anchor="nw",
+# Create the productsListOption Button
+productsListOption = Button(
+    window,
     text="Listar Productos",
-    fill="#7C8DB5",
-    font=("Poppins Medium", 16 * -1)
+    bg="#FFFFFF",  # Set background color to match window background
+    fg="#7C8DB5",  # Set text color
+    font=("Poppins Medium", 16 * -1),
+    borderwidth=0,  # Set border width to 0 to remove border
+    highlightthickness=0,  # Set highlight thickness to 0 to remove border highlight
+    command=productsList
 )
-
+# Place the productsListOption Button
+productsListOption.place(x=82, y=282)
+# Option icon.
 image_image_6 = PhotoImage(
     file=relative_to_assets("image_6.png"))
 image_6 = canvas.create_image(
@@ -127,16 +258,20 @@ image_6 = canvas.create_image(
     293.0,
     image=image_image_6
 )
-
-canvas.create_text(
-    82.0,
-    325.0,
-    anchor="nw",
+# Create the saleListOption Button
+salesListOption = Button(
+    window,
     text="Listar Ventas",
-    fill="#7C8DB5",
-    font=("Poppins Medium", 16 * -1)
+    bg="#FFFFFF",  # Set background color to match window background
+    fg="#7C8DB5",  # Set text color
+    font=("Poppins Medium", 16 * -1),
+    borderwidth=0,  # Set border width to 0 to remove border
+    highlightthickness=0,  # Set highlight thickness to 0 to remove border highlight
+    command=salesList
 )
-
+# Place the salesListOption Button
+salesListOption.place(x=82, y=325)
+# Option icon.
 image_image_7 = PhotoImage(
     file=relative_to_assets("image_7.png"))
 image_7 = canvas.create_image(
@@ -170,15 +305,20 @@ image_8 = canvas.create_image(
     image=image_image_8
 )
 
-canvas.create_text(
-    82.00146484375,
-    578.0,
-    anchor="nw",
+# Create the signOffOption Button
+signOffOption = Button(
+    window,
     text="Cerrar Sesión",
-    fill="#FF3B30",
-    font=("Poppins Medium", 16 * -1)
+    bg="#FFFFFF",  # Set background color to match window background
+    fg="#FF3B30",  # Set text color
+    font=("Poppins Medium", 16 * -1),
+    borderwidth=0,  # Set border width to 0 to remove border
+    highlightthickness=0,  # Set highlight thickness to 0 to remove border highlight
+    command=signOff
 )
-
+# Place the signOffOption Button
+signOffOption.place(x=82.00146484375, y=578)
+# Option icon.
 image_image_9 = PhotoImage(
     file=relative_to_assets("image_9.png"))
 image_9 = canvas.create_image(
@@ -186,7 +326,6 @@ image_9 = canvas.create_image(
     590.0,
     image=image_image_9
 )
-
 canvas.create_text(
     294.0,
     101.0,
@@ -386,33 +525,33 @@ entry_6.place(
     width=364.0,
     height=43.0
 )
-
+#Working :3
 button_image_1 = PhotoImage(
     file=relative_to_assets("button_1.png"))
-button_1 = Button(
+addProduct_Button = Button(
     image=button_image_1,
     borderwidth=0,
     highlightthickness=0,
-    command=lambda: print("button_1 clicked"),
+    command=addProduct,
     relief="flat"
 )
-button_1.place(
+addProduct_Button.place(
     x=703.0,
     y=511.0,
     width=382.0,
     height=54.0
 )
-
+#Working :3
 button_image_2 = PhotoImage(
     file=relative_to_assets("button_2.png"))
-button_2 = Button(
+uploadProctImage_Button = Button(
     image=button_image_2,
     borderwidth=0,
     highlightthickness=0,
-    command=lambda: print("button_2 clicked"),
+    command=uploadProctImage,
     relief="flat"
 )
-button_2.place(
+uploadProctImage_Button.place(
     x=294.0,
     y=511.0,
     width=382.0,
