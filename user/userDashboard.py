@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from tkinter import Tk, Canvas, Entry, Text, Button, PhotoImage
+from tkinter import messagebox
 import sys
 import sqlite3
 from PIL import Image
@@ -145,9 +146,15 @@ def addProduct(counter, title, description, price, imgFile, stock):
             #Como sabemos que el elemento existe, encontramos el indice
             index = cartProducts.index(i)
             
+            #Actualizamos valores y actualizamos la lista
             i["Cantidad"] = quantity
             i["Subtotal"] = subtotal
             cartProducts[index] = i
+
+            #Mostramos mensaje
+            messagebox.showinfo("Carrito Actualizado", "El producto ha sido actualizado en el carrito de compras exitosamente")
+            
+            #Retornamos para que no se ejecute el código de abajo
             return
 
     #Creamos el diccionario
@@ -163,6 +170,9 @@ def addProduct(counter, title, description, price, imgFile, stock):
 
     #Agregammos diccionario a la lista
     cartProducts.append(newProductCard)
+
+    #Mostramos mensaje
+    messagebox.showinfo("Carrito Actualizado", "El producto ha sido añadido al carrito de compras exitosamente")
 
 window = Tk()
 
