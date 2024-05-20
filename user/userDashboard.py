@@ -5,11 +5,20 @@ from tkinter import messagebox
 import sys
 import sqlite3
 from PIL import Image
+import ast
 import subprocess
 import json
 
 cedula = sys.argv[1]
-cartProducts = []
+
+#Validamos que se haya pasado un segundo parametro
+if len(sys.argv) > 2:
+    #Obtenemos el arreglo en string
+    cartProducts_str = sys.argv[2]
+    # Convert the string to a list of dictionaries
+    cartProducts = ast.literal_eval(cartProducts_str)
+else:
+    cartProducts = []
 
 CURRENT_DIR = Path(__file__).resolve().parent
 
@@ -39,7 +48,14 @@ def openShoppingCart():
    # Convert the list of dictionaries to a string
     cartProducts_str = json.dumps(cartProducts)
 
-    subprocess.Popen(['python', shopping_cart_path, cartProducts_str])
+    subprocess.Popen(['python', shopping_cart_path, cartProducts_str, cedula])
+    sys.exit(0)
+
+def logout():
+    # Construir la ruta al archivo userLogin.py
+    logout_path = os.path.join(script_dir, "../login/userLogin.py")
+
+    subprocess.Popen(['python', logout_path])
     sys.exit(0)
 
 #Obtenemos el nombre del usuario que acaba de ingresar
@@ -147,8 +163,8 @@ def addProduct(counter, title, description, price, imgFile, stock):
             index = cartProducts.index(i)
             
             #Actualizamos valores y actualizamos la lista
-            i["Cantidad"] = quantity
-            i["Subtotal"] = subtotal
+            i["Cantidad"] += quantity
+            i["Subtotal"] += subtotal
             cartProducts[index] = i
 
             #Mostramos mensaje
@@ -256,7 +272,7 @@ button_29 = Button(
     image=button_image_29,
     borderwidth=0,
     highlightthickness=0,
-    command=lambda: print("button_29 clicked"),
+    command=logout,
     relief="flat"
 )
 button_29.place(
