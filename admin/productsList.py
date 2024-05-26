@@ -1,6 +1,7 @@
-import os
 from pathlib import Path
-from tkinter import Tk, Canvas, Entry, Text, Button, PhotoImage
+import os, sys, subprocess, sqlite3, xlsxwriter
+from tkinter import messagebox as mb
+from tkinter import Tk, Canvas, Button, PhotoImage
 
 # Obtenemos la ruta del archivo actual
 CURRENT_DIR = Path(__file__).resolve().parent
@@ -10,209 +11,228 @@ RELATIVE_PATH = Path("../assets/productsList")
 
 # Combinamos la ruta actual con la parte relativa para obtener la ruta absoluta
 ASSETS_PATH = CURRENT_DIR / RELATIVE_PATH
+# Get the login path.
+LOGIN_PATH = CURRENT_DIR / ("../login/adminLogin.py")
+
+# Obtener la ruta del directorio actual del script para abrir los demás archivos
+script_dir = os.path.dirname(__file__)
 
 def relative_to_assets(path: str) -> Path:
     # Combinamos la ruta de los assets con la ruta proporcionada
     return ASSETS_PATH / Path(path)
 
+# Commands for the options and buttons.
+def menu():
+    admin_dashboard_path = os.path.join(script_dir, "adminDashboard.py")
+    subprocess.Popen(['python', admin_dashboard_path])
+    sys.exit(0)
+
+def addProducts():
+    path = os.path.join(script_dir, "addProducts.py")
+    subprocess.Popen(['python', path])
+    sys.exit(0)
+
+def deleteProducts():
+    path = os.path.join(script_dir, "deleteProducts.py")
+    subprocess.Popen(['python', path])
+    sys.exit(0)
+
+def editProducts():
+    path = os.path.join(script_dir, "editProducts.py")
+    subprocess.Popen(['python', path])
+    sys.exit(0)
+
+def productsList():
+    path = os.path.join(script_dir, "productsList.py")
+    subprocess.Popen(['python', path])
+    sys.exit(0)
+
+def salesList():
+    path = os.path.join(script_dir, "salesList.py")
+    subprocess.Popen(['python', path])
+    sys.exit(0)
+
+def signOff():
+    path = LOGIN_PATH
+    subprocess.Popen(['python', path])
+    sys.exit(0)
+
+def connect_to_database():
+    conn = sqlite3.connect('shopeasy.db')
+    cursor = conn.cursor()
+    return conn, cursor
+
+def showProducts_v2(canvas):
+    conn, cursor = connect_to_database()
+    cursor.execute("SELECT * FROM productos")
+    all_products = cursor.fetchall()
+    conn.close()
+
+    y_positions = [290, 357, 424, 491, 562]
+    for i, product in enumerate(all_products[:5]):
+        product_code = product[0]
+        product_name = product[1]
+        category = product[2]
+        description = product[3]
+        stock = product[4]
+        price = product[5]
+        
+        canvas.create_text(319, y_positions[i], anchor="nw", text=product_code, fill="#535353", font=("RubikRoman Regular", 15* -1))
+        canvas.create_text(390, y_positions[i], anchor="nw", text=product_name, fill="#535353", font=("RubikRoman Regular", 15* -1))
+        canvas.create_text(542, y_positions[i], anchor="nw", text=category, fill="#535353", font=("RubikRoman Regular", 15* -1))
+        canvas.create_text(690, y_positions[i], anchor="nw", text=description, fill="#535353", font=("RubikRoman Regular", 15* -1))
+        canvas.create_text(895, y_positions[i], anchor="nw", text=stock, fill="#535353", font=("RubikRoman Regular", 15* -1))
+        canvas.create_text(1003, y_positions[i], anchor="nw", text=price, fill="#535353", font=("RubikRoman Regular", 15* -1))
+
+def exportToExcel():
+    try:
+        conn, cursor = connect_to_database()
+        cursor.execute("SELECT * FROM productos")
+        all_products = cursor.fetchall()
+        conn.close()
+        
+        workbook = xlsxwriter.Workbook(os.path.join(os.path.expanduser("~"), "Downloads", "productos.xlsx"))
+        worksheet = workbook.add_worksheet()
+        
+        headers = ["Código", "Nombre", "Categoría", "Descripción", "Stock", "Precio", "Imagen"]
+        for col, header in enumerate(headers):
+            worksheet.write(0, col, header)
+        
+        for row, product in enumerate(all_products, start=1):
+            for col, value in enumerate(product):
+                worksheet.write(row, col, value)
+        
+        workbook.close()
+        mb.showinfo("Lista descargada", "Se ha creado el archivo Excel 'productos.xlsx' en la carpeta de Descargas.")
+    except Exception as e:
+        mb.showerror("Error", f"No se pudo crear el archivo Excel.\n\nError: {str(e)}")
+
 window = Tk()
 
-#Definimos dimensiones, nombre de la ventana, favicon y background-color
+# Definimos dimensiones, nombre de la ventana, favicon y background-color
 window.geometry("1137x639")
 window.title("ShopEasy")
 window.iconbitmap('assets/main/shopEasyLogo.ico')
 window.configure(bg = "#FFFFFF")
 
-
 canvas = Canvas(
     window,
-    bg = "#FFFFFF",
-    height = 639,
-    width = 1137,
-    bd = 0,
-    highlightthickness = 0,
-    relief = "ridge"
+    bg="#FFFFFF",
+    height=639,
+    width=1137,
+    bd=0,
+    highlightthickness=0,
+    relief="ridge"
 )
 
-canvas.place(x = 0, y = 0)
-image_image_1 = PhotoImage(
-    file=relative_to_assets("image_1.png"))
-image_1 = canvas.create_image(
-    112.0,
-    47.0,
-    image=image_image_1
-)
+canvas.place(x=0, y=0)
+image_image_1 = PhotoImage(file=relative_to_assets("image_1.png"))
+image_1 = canvas.create_image(112.0, 47.0, image=image_image_1)
 
-canvas.create_text(
-    82.0,
-    110.0,
-    anchor="nw",
+# Menu Button
+menuOption = Button(
+    window,
     text="Menu",
-    fill="#347AE2",
-    font=("Poppins Medium", 16 * -1)
+    bg="#FFFFFF",
+    fg="#347AE2",
+    font=("Poppins Medium", 16 * -1),
+    borderwidth=0,
+    highlightthickness=0,
+    command=menu
 )
+menuOption.place(x=82, y=110)
+image_image_2 = PhotoImage(file=relative_to_assets("image_2.png"))
+image_2 = canvas.create_image(64.0, 122.0, image=image_image_2)
 
-image_image_2 = PhotoImage(
-    file=relative_to_assets("image_2.png"))
-image_2 = canvas.create_image(
-    64.0,
-    122.0,
-    image=image_image_2
-)
-
-canvas.create_text(
-    82.0,
-    196.0,
-    anchor="nw",
+# Edit Products Button
+editproductsOption = Button(
+    window,
     text="Editar Productos",
-    fill="#7C8DB5",
-    font=("Poppins Medium", 16 * -1)
+    bg="#FFFFFF",
+    fg="#7C8DB5",
+    font=("Poppins Medium", 16 * -1),
+    borderwidth=0,
+    highlightthickness=0,
+    command=editProducts
 )
+editproductsOption.place(x=82, y=196)
+image_image_3 = PhotoImage(file=relative_to_assets("image_3.png"))
+image_3 = canvas.create_image(63.0, 207.0, image=image_image_3)
 
-image_image_3 = PhotoImage(
-    file=relative_to_assets("image_3.png"))
-image_3 = canvas.create_image(
-    63.0,
-    207.0,
-    image=image_image_3
-)
-
-canvas.create_text(
-    80.0,
-    153.0,
-    anchor="nw",
+# Add Products Button
+addproductsOption = Button(
+    window,
     text="Añadir Productos",
-    fill="#7C8DB5",
-    font=("Poppins Medium", 16 * -1)
+    bg="#FFFFFF",
+    fg="#7C8DB5",
+    font=("Poppins Medium", 16 * -1),
+    borderwidth=0,
+    highlightthickness=0,
+    command=addProducts
 )
+addproductsOption.place(x=80, y=153)
+image_image_4 = PhotoImage(file=relative_to_assets("image_4.png"))
+image_4 = canvas.create_image(59.0, 165.0, image=image_image_4)
 
-image_image_4 = PhotoImage(
-    file=relative_to_assets("image_4.png"))
-image_4 = canvas.create_image(
-    59.0,
-    165.0,
-    image=image_image_4
-)
-
-canvas.create_text(
-    82.0,
-    239.0,
-    anchor="nw",
+# Delete Products Button
+deleteproductsOption = Button(
+    window,
     text="Eliminar Productos",
-    fill="#7C8DB5",
-    font=("Poppins Medium", 16 * -1)
+    bg="#FFFFFF",
+    fg="#7C8DB5",
+    font=("Poppins Medium", 16 * -1),
+    borderwidth=0,
+    highlightthickness=0,
+    command=deleteProducts
 )
+deleteproductsOption.place(x=82, y=239)
+image_image_5 = PhotoImage(file=relative_to_assets("image_5.png"))
+image_5 = canvas.create_image(64.0, 251.0, image=image_image_5)
 
-image_image_5 = PhotoImage(
-    file=relative_to_assets("image_5.png"))
-image_5 = canvas.create_image(
-    64.0,
-    251.0,
-    image=image_image_5
-)
-
-canvas.create_text(
-    82.5,
-    282.0,
-    anchor="nw",
+# List Products Button
+productsListOption = Button(
+    window,
     text="Listar Productos",
-    fill="#7C8DB5",
-    font=("Poppins Medium", 16 * -1)
+    bg="#FFFFFF",
+    fg="#7C8DB5",
+    font=("Poppins Medium", 16 * -1),
+    borderwidth=0,
+    highlightthickness=0,
+    command=productsList
 )
+productsListOption.place(x=82, y=282)
+image_image_6 = PhotoImage(file=relative_to_assets("image_6.png"))
+image_6 = canvas.create_image(64.0, 293.0, image=image_image_6)
 
-image_image_6 = PhotoImage(
-    file=relative_to_assets("image_6.png"))
-image_6 = canvas.create_image(
-    64.0,
-    293.0,
-    image=image_image_6
-)
-
-canvas.create_text(
-    82.0,
-    325.0,
-    anchor="nw",
+# List Sales Button
+salesListOption = Button(
+    window,
     text="Listar Ventas",
-    fill="#7C8DB5",
-    font=("Poppins Medium", 16 * -1)
+    bg="#FFFFFF",
+    fg="#7C8DB5",
+    font=("Poppins Medium", 16 * -1),
+    borderwidth=0,
+    highlightthickness=0,
+    command=salesList
 )
+salesListOption.place(x=82, y=325)
+image_image_7 = PhotoImage(file=relative_to_assets("image_7.png"))
+image_7 = canvas.create_image(63.0, 336.0, image=image_image_7)
 
-image_image_7 = PhotoImage(
-    file=relative_to_assets("image_7.png"))
-image_7 = canvas.create_image(
-    64.0,
-    337.0,
-    image=image_image_7
-)
-
-canvas.create_rectangle(
-    246.0,
-    110.0,
-    247.00002146229235,
-    602.0,
-    fill="#E6EDFF",
-    outline="")
-
-canvas.create_text(
-    82.001953125,
-    368.0,
-    anchor="nw",
-    text="Configuración",
-    fill="#7C8DB5",
-    font=("Poppins Medium", 16 * -1)
-)
-
-image_image_8 = PhotoImage(
-    file=relative_to_assets("image_8.png"))
-image_8 = canvas.create_image(
-    64.0,
-    379.49700927734375,
-    image=image_image_8
-)
-
-canvas.create_text(
-    82.001953125,
-    578.0,
-    anchor="nw",
+# Sign Off Button
+signOffOption = Button(
+    window,
     text="Cerrar Sesión",
-    fill="#FF3B30",
-    font=("Poppins Medium", 16 * -1)
+    bg="#FFFFFF",
+    fg="#FF0000",
+    font=("Poppins Medium", 16 * -1),
+    borderwidth=0,
+    highlightthickness=0,
+    command=signOff
 )
-
-image_image_9 = PhotoImage(
-    file=relative_to_assets("image_9.png"))
-image_9 = canvas.create_image(
-    62.0,
-    590.0,
-    image=image_image_9
-)
-
-canvas.create_text(
-    296.0,
-    79.0,
-    anchor="nw",
-    text="Listado de Productos",
-    fill="#000000",
-    font=("Poppins Medium", 28 * -1)
-)
-
-canvas.create_text(
-    296.0,
-    124.0,
-    anchor="nw",
-    text="Controla y sigue de la mejor manera tu inventario de productos",
-    fill="#7C8DB5",
-    font=("Poppins Regular", 16 * -1)
-)
-
-canvas.create_text(
-    296.0,
-    124.0,
-    anchor="nw",
-    text="Controla y sigue de la mejor manera tu inventario de productos",
-    fill="#7C8DB5",
-    font=("Poppins Regular", 16 * -1)
-)
+signOffOption.place(x=82, y=585)
+image_image_9 = PhotoImage(file=relative_to_assets("image_9.png"))
+image_9 = canvas.create_image(63.0, 597.0, image=image_image_9)
 
 image_image_10 = PhotoImage(
     file=relative_to_assets("image_10.png"))
@@ -222,105 +242,38 @@ image_10 = canvas.create_image(
     image=image_image_10
 )
 
+# UI Elements for Product List
+canvas.create_text(
+    296.0,
+    79.0,
+    anchor="nw",
+    text="Listado de Productos",
+    fill="#000000",
+    font=("Poppins Bold", 28 * -1)
+)
+canvas.create_text(
+    296.0,
+    124.0,
+    anchor="nw",
+    text="Controla y sigue de la mejor manera tu inventario de productos",
+    fill="#7C8DB5",
+    font=("Poppins Regular", 16 * -1)
+)
+
 button_image_1 = PhotoImage(
     file=relative_to_assets("button_1.png"))
-button_1 = Button(
+dowloadButton = Button(
     image=button_image_1,
     borderwidth=0,
     highlightthickness=0,
-    command=lambda: print("button_1 clicked"),
+    command=exportToExcel,
     relief="flat"
 )
-button_1.place(
+dowloadButton.place(
     x=296.0,
     y=161.0,
     width=287.0,
     height=49.0
-)
-
-canvas.create_rectangle(
-    296.0,
-    274.0,
-    1087.0,
-    330.0,
-    fill="#F5F5F5",
-    outline="")
-
-canvas.create_rectangle(
-    296.0,
-    341.0,
-    1087.0,
-    397.0,
-    fill="#F5F5F5",
-    outline="")
-
-canvas.create_rectangle(
-    296.0,
-    408.0,
-    1087.0,
-    464.0,
-    fill="#F5F5F5",
-    outline="")
-
-canvas.create_rectangle(
-    296.0,
-    477.0,
-    1087.0,
-    533.0,
-    fill="#F5F5F5",
-    outline="")
-
-canvas.create_rectangle(
-    296.0,
-    544.0,
-    1087.0,
-    600.0,
-    fill="#F5F5F5",
-    outline="")
-
-canvas.create_text(
-    895.0,
-    232.0,
-    anchor="nw",
-    text="Stock",
-    fill="#535353",
-    font=("Rubik Medium", 16 * -1)
-)
-
-canvas.create_text(
-    973.0,
-    232.0,
-    anchor="nw",
-    text="Precio Unidad",
-    fill="#535353",
-    font=("Rubik Medium", 16 * -1)
-)
-
-canvas.create_text(
-    690.0,
-    232.0,
-    anchor="nw",
-    text="Descripción",
-    fill="#535353",
-    font=("Rubik Medium", 16 * -1)
-)
-
-canvas.create_text(
-    542.0,
-    232.0,
-    anchor="nw",
-    text="Categoría",
-    fill="#535353",
-    font=("Rubik Medium", 16 * -1)
-)
-
-canvas.create_text(
-    388.0,
-    232.0,
-    anchor="nw",
-    text="Nombre",
-    fill="#535353",
-    font=("Rubik Medium", 16 * -1)
 )
 
 canvas.create_text(
@@ -329,277 +282,50 @@ canvas.create_text(
     anchor="nw",
     text="Código",
     fill="#535353",
-    font=("Rubik Medium", 16 * -1)
+    font=("Poppins SemiBold", 16 * -1)
 )
-
 canvas.create_text(
-    319.0,
-    290.0,
+    388.0,
+    232.0,
     anchor="nw",
-    text="1",
+    text="Nombre",
     fill="#535353",
-    font=("RubikRoman Regular", 16 * -1)
+    font=("Poppins SemiBold", 16 * -1)
 )
-
-canvas.create_text(
-    319.0,
-    357.0,
-    anchor="nw",
-    text="2",
-    fill="#535353",
-    font=("RubikRoman Regular", 16 * -1)
-)
-
-canvas.create_text(
-    319.0,
-    424.0,
-    anchor="nw",
-    text="3",
-    fill="#535353",
-    font=("RubikRoman Regular", 16 * -1)
-)
-
-canvas.create_text(
-    321.0,
-    491.0,
-    anchor="nw",
-    text="4",
-    fill="#535353",
-    font=("RubikRoman Regular", 16 * -1)
-)
-
-canvas.create_text(
-    319.0,
-    562.0,
-    anchor="nw",
-    text="5",
-    fill="#535353",
-    font=("RubikRoman Regular", 16 * -1)
-)
-
-canvas.create_text(
-    390.0,
-    292.0,
-    anchor="nw",
-    text="Lorem Ipsum",
-    fill="#535353",
-    font=("RubikRoman Regular", 15 * -1)
-)
-
-canvas.create_text(
-    390.0,
-    359.0,
-    anchor="nw",
-    text="Lorem Ipsum",
-    fill="#535353",
-    font=("RubikRoman Regular", 15 * -1)
-)
-
-canvas.create_text(
-    390.0,
-    426.0,
-    anchor="nw",
-    text="Lorem Ipsum",
-    fill="#535353",
-    font=("RubikRoman Regular", 15 * -1)
-)
-
-canvas.create_text(
-    390.0,
-    493.0,
-    anchor="nw",
-    text="Lorem Ipsum",
-    fill="#535353",
-    font=("RubikRoman Regular", 15 * -1)
-)
-
-canvas.create_text(
-    390.0,
-    562.0,
-    anchor="nw",
-    text="Lorem Ipsum",
-    fill="#535353",
-    font=("RubikRoman Regular", 15 * -1)
-)
-
 canvas.create_text(
     542.0,
-    291.0,
+    232.0,
     anchor="nw",
-    text="Lorem Ipsum",
+    text="Categoría",
     fill="#535353",
-    font=("RubikRoman Regular", 15 * -1)
+    font=("Poppins SemiBold", 16 * -1)
 )
-
-canvas.create_text(
-    542.0,
-    358.0,
-    anchor="nw",
-    text="Lorem Ipsum",
-    fill="#535353",
-    font=("RubikRoman Regular", 15 * -1)
-)
-
-canvas.create_text(
-    542.0,
-    425.0,
-    anchor="nw",
-    text="Lorem Ipsum",
-    fill="#535353",
-    font=("RubikRoman Regular", 15 * -1)
-)
-
-canvas.create_text(
-    542.0,
-    492.0,
-    anchor="nw",
-    text="Lorem Ipsum",
-    fill="#535353",
-    font=("RubikRoman Regular", 15 * -1)
-)
-
-canvas.create_text(
-    542.0,
-    561.0,
-    anchor="nw",
-    text="Lorem Ipsum",
-    fill="#535353",
-    font=("RubikRoman Regular", 15 * -1)
-)
-
 canvas.create_text(
     690.0,
-    291.0,
+    232.0,
     anchor="nw",
-    text="Lorem Ipsum",
+    text="Descripción",
     fill="#535353",
-    font=("RubikRoman Regular", 15 * -1)
+    font=("Poppins SemiBold", 16 * -1)
 )
-
-canvas.create_text(
-    690.0,
-    358.0,
-    anchor="nw",
-    text="Lorem Ipsum",
-    fill="#535353",
-    font=("RubikRoman Regular", 15 * -1)
-)
-
-canvas.create_text(
-    690.0,
-    425.0,
-    anchor="nw",
-    text="Lorem Ipsum",
-    fill="#535353",
-    font=("RubikRoman Regular", 15 * -1)
-)
-
-canvas.create_text(
-    690.0,
-    492.0,
-    anchor="nw",
-    text="Lorem Ipsum",
-    fill="#535353",
-    font=("RubikRoman Regular", 15 * -1)
-)
-
-canvas.create_text(
-    690.0,
-    561.0,
-    anchor="nw",
-    text="Lorem Ipsum",
-    fill="#535353",
-    font=("RubikRoman Regular", 16 * -1)
-)
-
 canvas.create_text(
     895.0,
-    291.0,
+    232.0,
     anchor="nw",
-    text="Lorem",
+    text="Stock",
     fill="#535353",
-    font=("RubikRoman Regular", 15 * -1)
+    font=("Poppins SemiBold", 16 * -1)
 )
-
 canvas.create_text(
-    895.0,
-    358.0,
+    973.0,
+    232.0,
     anchor="nw",
-    text="Lorem",
+    text="Precio Unidad",
     fill="#535353",
-    font=("RubikRoman Regular", 15 * -1)
+    font=("Poppins SemiBold", 16 * -1)
 )
+# Call the function to display products on the canvas
+showProducts_v2(canvas)
 
-canvas.create_text(
-    895.0,
-    425.0,
-    anchor="nw",
-    text="Lorem",
-    fill="#535353",
-    font=("RubikRoman Regular", 15 * -1)
-)
-
-canvas.create_text(
-    895.0,
-    492.0,
-    anchor="nw",
-    text="Lorem",
-    fill="#535353",
-    font=("RubikRoman Regular", 15 * -1)
-)
-
-canvas.create_text(
-    895.0,
-    561.0,
-    anchor="nw",
-    text="Lorem",
-    fill="#535353",
-    font=("RubikRoman Regular", 15 * -1)
-)
-
-canvas.create_text(
-    1003.0,
-    291.0,
-    anchor="nw",
-    text="Lorem",
-    fill="#535353",
-    font=("RubikRoman Regular", 15 * -1)
-)
-
-canvas.create_text(
-    1003.0,
-    358.0,
-    anchor="nw",
-    text="Lorem",
-    fill="#535353",
-    font=("RubikRoman Regular", 15 * -1)
-)
-
-canvas.create_text(
-    1003.0,
-    425.0,
-    anchor="nw",
-    text="Lorem",
-    fill="#535353",
-    font=("RubikRoman Regular", 15 * -1)
-)
-
-canvas.create_text(
-    1003.0,
-    492.0,
-    anchor="nw",
-    text="Lorem",
-    fill="#535353",
-    font=("RubikRoman Regular", 15 * -1)
-)
-
-canvas.create_text(
-    1003.0,
-    561.0,
-    anchor="nw",
-    text="Lorem",
-    fill="#535353",
-    font=("RubikRoman Regular", 15 * -1)
-)
 window.resizable(False, False)
 window.mainloop()
