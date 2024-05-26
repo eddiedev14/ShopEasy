@@ -3,25 +3,15 @@ import os, sys, subprocess, sqlite3, xlsxwriter
 from tkinter import messagebox as mb
 from tkinter import Tk, Canvas, Button, PhotoImage
 
-# Obtenemos la ruta del archivo actual
 CURRENT_DIR = Path(__file__).resolve().parent
-
-# Definimos la parte relativa de la ruta en donde se encuentran los assets
 RELATIVE_PATH = Path("../assets/productsList")
-
-# Combinamos la ruta actual con la parte relativa para obtener la ruta absoluta
 ASSETS_PATH = CURRENT_DIR / RELATIVE_PATH
-# Get the login path.
 LOGIN_PATH = CURRENT_DIR / ("../login/adminLogin.py")
-
-# Obtener la ruta del directorio actual del script para abrir los demás archivos
 script_dir = os.path.dirname(__file__)
 
 def relative_to_assets(path: str) -> Path:
-    # Combinamos la ruta de los assets con la ruta proporcionada
     return ASSETS_PATH / Path(path)
 
-# Commands for the options and buttons.
 def menu():
     admin_dashboard_path = os.path.join(script_dir, "adminDashboard.py")
     subprocess.Popen(['python', admin_dashboard_path])
@@ -108,8 +98,6 @@ def exportToExcel():
         mb.showerror("Error", f"No se pudo crear el archivo Excel.\n\nError: {str(e)}")
 
 window = Tk()
-
-# Definimos dimensiones, nombre de la ventana, favicon y background-color
 window.geometry("1137x639")
 window.title("ShopEasy")
 window.iconbitmap('assets/main/shopEasyLogo.ico')
@@ -129,7 +117,6 @@ canvas.place(x=0, y=0)
 image_image_1 = PhotoImage(file=relative_to_assets("image_1.png"))
 image_1 = canvas.create_image(112.0, 47.0, image=image_image_1)
 
-# Menu Button
 menuOption = Button(
     window,
     text="Menu",
@@ -144,7 +131,6 @@ menuOption.place(x=82, y=110)
 image_image_2 = PhotoImage(file=relative_to_assets("image_2.png"))
 image_2 = canvas.create_image(64.0, 122.0, image=image_image_2)
 
-# Edit Products Button
 editproductsOption = Button(
     window,
     text="Editar Productos",
@@ -159,7 +145,6 @@ editproductsOption.place(x=82, y=196)
 image_image_3 = PhotoImage(file=relative_to_assets("image_3.png"))
 image_3 = canvas.create_image(63.0, 207.0, image=image_image_3)
 
-# Add Products Button
 addproductsOption = Button(
     window,
     text="Añadir Productos",
@@ -174,7 +159,6 @@ addproductsOption.place(x=80, y=153)
 image_image_4 = PhotoImage(file=relative_to_assets("image_4.png"))
 image_4 = canvas.create_image(59.0, 165.0, image=image_image_4)
 
-# Delete Products Button
 deleteproductsOption = Button(
     window,
     text="Eliminar Productos",
@@ -189,7 +173,6 @@ deleteproductsOption.place(x=82, y=239)
 image_image_5 = PhotoImage(file=relative_to_assets("image_5.png"))
 image_5 = canvas.create_image(64.0, 251.0, image=image_image_5)
 
-# List Products Button
 productsListOption = Button(
     window,
     text="Listar Productos",
@@ -204,7 +187,6 @@ productsListOption.place(x=82, y=282)
 image_image_6 = PhotoImage(file=relative_to_assets("image_6.png"))
 image_6 = canvas.create_image(64.0, 293.0, image=image_image_6)
 
-# List Sales Button
 salesListOption = Button(
     window,
     text="Listar Ventas",
@@ -219,7 +201,6 @@ salesListOption.place(x=82, y=325)
 image_image_7 = PhotoImage(file=relative_to_assets("image_7.png"))
 image_7 = canvas.create_image(63.0, 336.0, image=image_image_7)
 
-# Sign Off Button
 signOffOption = Button(
     window,
     text="Cerrar Sesión",
@@ -242,7 +223,6 @@ image_10 = canvas.create_image(
     image=image_image_10
 )
 
-# UI Elements for Product List
 canvas.create_text(
     296.0,
     79.0,
@@ -324,7 +304,7 @@ canvas.create_text(
     fill="#535353",
     font=("Poppins SemiBold", 16 * -1)
 )
-# Call the function to display products on the canvas
+
 showProducts_v2(canvas)
 
 window.resizable(False, False)
