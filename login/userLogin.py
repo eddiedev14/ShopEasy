@@ -6,20 +6,15 @@ from tkinter import messagebox as mb
 import sys
 import subprocess
 
-# Obtener la ruta del directorio actual del script para abrir los demás archivos
 script_dir = os.path.dirname(__file__)
 
-# Obtenemos la ruta del archivo actual
 CURRENT_DIR = Path(__file__).resolve().parent
 
-# Definimos la parte relativa de la ruta en donde se encuentran los assets
 RELATIVE_PATH = Path("../assets/userLogin")
 
-# Combinamos la ruta actual con la parte relativa para obtener la ruta absoluta
 ASSETS_PATH = CURRENT_DIR / RELATIVE_PATH
 
 def relative_to_assets(path: str) -> Path:
-    # Combinamos la ruta de los assets con la ruta proporcionada
     return ASSETS_PATH / Path(path)
 
 def validateLogin():
@@ -37,27 +32,22 @@ def validateLogin():
         if user == None:
             mb.showerror(title="Usuario no encontrado", message="Los datos que se ingresaron no coinciden con ningun usuario en la base de datos")
         else:                
-            # Construir la ruta al archivo userLogin.py
             user_login_path = os.path.join(script_dir, "../user/userDashboard.py")
-            #Se pasa como parametro la cedula para obtener el nombre
             subprocess.Popen(['python', user_login_path, cedula])
             sys.exit(0)
 
 def loginAdmin():
-    # Construir la ruta al archivo userLogin.py
     user_login_path = os.path.join(script_dir, "adminLogin.py")
     subprocess.Popen(['python', user_login_path])
     sys.exit(0)
 
 def registerUser():
-    # Construir la ruta al archivo userLogin.py
     user_login_path = os.path.join(script_dir, "userRegister.py")
     subprocess.Popen(['python', user_login_path])
     sys.exit(0)
 
 window = Tk()
 
-#Definimos dimensiones, nombre de la ventana, favicon y background-color
 window.geometry("1137x639")
 window.title("ShopEasy")
 window.iconbitmap('assets/main/shopEasyLogo.ico')

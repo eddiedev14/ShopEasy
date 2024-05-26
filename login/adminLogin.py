@@ -6,39 +6,30 @@ from tkinter import messagebox as mb
 import subprocess
 import sys
 
-# Obtener la ruta del directorio actual del script para abrir los demás archivos
 script_dir = os.path.dirname(__file__)
 
-# Obtenemos la ruta del archivo actual
 CURRENT_DIR = Path(__file__).resolve().parent
 
-# Definimos la parte relativa de la ruta en donde se encuentran los assets
 RELATIVE_PATH = Path("../assets/adminLogin")
 
-# Combinamos la ruta actual con la parte relativa para obtener la ruta absoluta
 ASSETS_PATH = CURRENT_DIR / RELATIVE_PATH
 
 def relative_to_assets(path: str) -> Path:
-    # Combinamos la ruta de los assets con la ruta proporcionada
     return ASSETS_PATH / Path(path)
-
-
 
 window = Tk()
 
-#Definimos dimensiones, nombre de la ventana, favicon y background-color
 window.geometry("1137x639")
 window.title("ShopEasy")
 window.iconbitmap('assets/main/shopEasyLogo.ico')
 window.configure(bg = "#FFFFFF")
 
-#Funciones necesarias para el programa
 def validateLogin():
     cedula = cedulaEntry.get()
     password = passwordEntry.get()
 
     if cedula == "" and password == "":
-        mb.showerror(title="Ha ocurrido un error", message="Rellana todos los campos del formulario")
+        mb.showerror(title="Ha ocurrido un error", message="Rellena todos los campos del formulario")
     else:
         db = sqlite3.connect('shopeasy.db')
         cursor = db.cursor()
@@ -48,24 +39,19 @@ def validateLogin():
         if user == None:
             mb.showerror(title="Usuario no encontrado", message="Los datos que se ingresaron no coinciden con ningun usuario en la base de datos")
         else:                
-            # Construir la ruta al archivo userLogin.py
             user_login_path = os.path.join(script_dir, "../admin/adminDashboard.py")
             subprocess.Popen(['python', user_login_path, cedula])
             sys.exit(0)
 
 def userLogin():
-    # Construir la ruta al archivo userLogin.py
     user_login_path = os.path.join(script_dir, "userLogin.py")
     subprocess.Popen(['python', user_login_path])
     sys.exit(0)
 
 def userRegister():
-    # Construir la ruta al archivo userLogin.py
     user_login_path = os.path.join(script_dir, "userRegister.py")
     subprocess.Popen(['python', user_login_path])
     sys.exit(0)
-    
-#Creamos la ventana
         
 canvas = Canvas(
     window,

@@ -11,81 +11,60 @@ import json
 
 cedula = sys.argv[1]
 
-#Validamos que se haya pasado un segundo parametro
 if len(sys.argv) > 2:
-    #Obtenemos el arreglo en string
     cartProducts_str = sys.argv[2]
-    # Convert the string to a list of dictionaries
     cartProducts = ast.literal_eval(cartProducts_str)
 else:
     cartProducts = []
 
 CURRENT_DIR = Path(__file__).resolve().parent
 
-# Definimos la parte relativa de la ruta en donde se encuentran los assets
 RELATIVE_PATH = Path("../assets/userDashboard")
 RELATIVE_PATH2 = Path("../images")
 
-# Combinamos la ruta actual con la parte relativa para obtener la ruta absoluta
 ASSETS_PATH = CURRENT_DIR / RELATIVE_PATH
 IMAGES_PATH = CURRENT_DIR / RELATIVE_PATH2
 
 def relative_to_assets(path: str) -> Path:
-    # Combinamos la ruta de los assets con la ruta proporcionada
     return ASSETS_PATH / Path(path)
 
 def relative_to_images(path: str) -> Path:
-    # Combinamos la ruta de los assets con la ruta proporcionada
     return IMAGES_PATH / Path(path)
 
-# Obtener la ruta del directorio actual del script para abrir los demás archivos
 script_dir = os.path.dirname(__file__)
 
 def openShoppingCart():
-    # Construir la ruta al archivo userLogin.py
     shopping_cart_path = os.path.join(script_dir, "shoppingCart.py")
     
-   # Convert the list of dictionaries to a string
     cartProducts_str = json.dumps(cartProducts)
 
     subprocess.Popen(['python', shopping_cart_path, cartProducts_str, cedula])
     sys.exit(0)
 
 def logout():
-    # Construir la ruta al archivo userLogin.py
     logout_path = os.path.join(script_dir, "../login/userLogin.py")
-
     subprocess.Popen(['python', logout_path])
     sys.exit(0)
 
-#Obtenemos el nombre del usuario que acaba de ingresar
 def getName(cedula):
     db = sqlite3.connect('shopeasy.db')
     cursor = db.cursor()
     cursor.execute("SELECT * FROM usuarios WHERE cedula=? AND tipo=?", (cedula, "Usuario"))
     user = cursor.fetchone()
-    #Retornamos el nombre del usuario que tenga esa cedula
     return user[1]
 
 #Función para redimensionar imagen
 def redimensionateImg(imagePath):
-    #Necesitamos redimensionar la imagen para que se vea bien para eso, usamos PIL
     imagen = Image.open(relative_to_images(imagePath))
-    #Obtenemos ancho y alto de la imagen
     ancho, alto = imagen.size
-    #Validamos si el ancho y alto es diferente a 96x96, para ese caso debemos redimensionar la imagen
     if ancho != 96 and alto != 96:
-        #Le damos tamaño de 96px x 96px
         imagenRedimensionada = imagen.resize((96, 96))
-        #Actualizamos la imagen
         imagenRedimensionada.save(f"images/{imagePath}")
 
-#Función para formatear precio del producto con punto de mil
 def formatPrice(price):
     precioFormateado = '{:,}'.format(price)
     return precioFormateado[:-2]
 
-#Función para automatizar la creación del nombre del producto, descripción y precio
 def createTitle(text, x, y):
     return canvas.create_text(
         x,
@@ -126,22 +105,16 @@ def createCounter(x, y):
         font=("Inter Bold", 9 * -1)
     )
 
-#Disminuir valor del contador
 def decreaseCounter(counter):
-    # Para obtener el contenido del elemento creado:
     value = int(canvas.itemcget(counter, "text"))
 
-    #Solo disminuiremos si el valor es mayor que 0, ya que si no el valor seria negativo
     if value > 0:
         newValue = value - 1
         canvas.itemconfig(counter, text=str(newValue))
 
-#Aumentar valor del contador
 def increaseCounter(counter, stock):
-    # Para obtener el contenido del elemento creado:
     value = int(canvas.itemcget(counter, "text"))
 
-    #Validamos para que no se pase del stock
     if value < int(stock):
         newValue = value + 1
         canvas.itemconfig(counter, text=str(newValue))
@@ -156,24 +129,18 @@ def addProduct(counter, title, description, price, imgFile, stock):
 
     subtotal = quantity * productPrice
 
-    #Actualizamos en caso de que exista o lo agregamos
     for i in cartProducts:
         if i["Nombre"] == productTitle and i["Descripcion"] == productDescription and i["Precio Unitario"] == productPrice and i["Imagen"] == imgFile and i["Stock"] == stock:
-            #Como sabemos que el elemento existe, encontramos el indice
             index = cartProducts.index(i)
             
-            #Actualizamos valores y actualizamos la lista
             i["Cantidad"] += quantity
             i["Subtotal"] += subtotal
             cartProducts[index] = i
 
-            #Mostramos mensaje
             messagebox.showinfo("Carrito Actualizado", "El producto ha sido actualizado en el carrito de compras exitosamente")
             
-            #Retornamos para que no se ejecute el código de abajo
             return
 
-    #Creamos el diccionario
     newProductCard = {
         "Nombre": productTitle,
         "Descripcion": productDescription,
@@ -184,21 +151,18 @@ def addProduct(counter, title, description, price, imgFile, stock):
         "Stock": stock
     }
 
-    #Agregammos diccionario a la lista
     cartProducts.append(newProductCard)
 
-    #Mostramos mensaje
     messagebox.showinfo("Carrito Actualizado", "El producto ha sido añadido al carrito de compras exitosamente")
 
 window = Tk()
 
-#Definimos dimensiones, nombre de la ventana, favicon y background-color
+
 window.geometry("1137x639")
 window.title("ShopEasy")
 window.iconbitmap('assets/main/shopEasyLogo.ico')
 window.configure(bg = "#FFFFFF")
 
-#Cargamos los productos de la base de datos y obtenemos 9 de ellos
 db = sqlite3.connect('shopeasy.db')
 cursor = db.cursor()
 cursor.execute("SELECT * FROM productos")
@@ -282,7 +246,6 @@ button_29.place(
     height=31.0
 )
 
-#Verificamos que exista el elemento 1 y creamos su componente
 try:
     product = products[0]
     stock_1 = product[4]
@@ -297,18 +260,14 @@ try:
         image=image_image_3
     )
 
-    #Redimensionar imagen
     redimensionateImg(product[6])
 
-    #Colocar imagen del producto
     image_image_12 = PhotoImage(file=relative_to_images(product_imagen_1))
     image_12 = canvas.create_image(
         104.0,
-        216.0,
-        image=image_image_12,
+        216.0,        image=image_image_12,
     )
 
-    #Formateamos el numero para que tenga el punto de mil y no se vea el .0
     precioFormateado = formatPrice(product[5])
 
     title_1 = createTitle(product[1], 164.0, 174.0)
@@ -364,11 +323,8 @@ try:
         height=20.0
     )
 
-#En caso de que no exista no lo creamos
 except IndexError:
     pass
-
-#Verificamos que exista el elemento 2 y creamos su componente
 
 try:
     product = products[1]
@@ -393,7 +349,6 @@ try:
         image=image_image_15
     )
 
-    #Formateamos el numero para que tenga el punto de mil y no se vea el .0
     precioFormateado = formatPrice(product[5])
 
     title_2 = createTitle(product[1], 522.0, 174.0)
@@ -452,7 +407,7 @@ try:
 except IndexError:
     pass
 
-#Verificamos que exista el elemento 3 y creamos su componente
+
 try:
     product = products[2]
     stock_3 = product[4]
@@ -476,7 +431,6 @@ try:
         image=image_image_18
     )
 
-    #Formateamos el numero para que tenga el punto de mil y no se vea el .0
     precioFormateado = formatPrice(product[5])
     
     title_3 = createTitle(product[1], 880.0, 174.0)
@@ -535,7 +489,6 @@ try:
 except IndexError:
     pass
 
-#Verificamos que exista el elemento 4 y creamos su componente
 try:
     product = products[3]
     stock_4 = product[4]
@@ -559,7 +512,6 @@ try:
         image=image_image_13
     )
 
-    #Formateamos el numero para que tenga el punto de mil y no se vea el .0
     precioFormateado = formatPrice(product[5])
 
     title_4 = createTitle(product[1], 164.0, 313.0)
@@ -618,7 +570,6 @@ try:
 except IndexError:
     pass
 
-#Verificamos que exista el elemento 5 y creamos su componente
 try:
     product = products[4]
     stock_5 = product[4]
@@ -642,7 +593,6 @@ try:
         image=image_image_16
     )
 
-    #Formateamos el numero para que tenga el punto de mil y no se vea el .0
     precioFormateado = formatPrice(product[5])
 
     title_5 = createTitle(product[1], 522.0, 313.0)
@@ -701,7 +651,6 @@ try:
 except IndexError:
     pass
 
-#Verificamos que exista el elemento 6 y creamos su componente
 try:
     product = products[5]
     stock_6 = product[4]
@@ -725,7 +674,6 @@ try:
         image=image_image_19
     )
 
-    #Formateamos el numero para que tenga el punto de mil y no se vea el .0
     precioFormateado = formatPrice(product[5])
 
     title_6 = createTitle(product[1], 880.0, 313.0)
@@ -784,7 +732,6 @@ try:
 except IndexError:
     pass
 
-#Verificamos que exista el elemento 7 y creamos su componente
 try:
     product = products[6]
     stock_7 = product[4]
@@ -808,7 +755,6 @@ try:
         image=image_image_14
     )
 
-    #Formateamos el numero para que tenga el punto de mil y no se vea el .0
     precioFormateado = formatPrice(product[5])
 
     title_7 = createTitle(product[1], 164.0, 448.0)
@@ -867,7 +813,6 @@ try:
 except IndexError:
     pass
 
-#Verificamos que exista el elemento 8 y creamos su componente
 try:
     product = products[7]
     stock_8 = product[4]
@@ -891,7 +836,6 @@ try:
         image=image_image_17
     )
 
-    #Formateamos el numero para que tenga el punto de mil y no se vea el .0
     precioFormateado = formatPrice(product[5])
 
     title_8 = createTitle(product[1], 522.0, 448.0)
@@ -973,7 +917,6 @@ try:
         image=image_image_20
     )
 
-    #Formateamos el numero para que tenga el punto de mil y no se vea el .0
     precioFormateado = formatPrice(product[5])
 
     title_9 = createTitle(product[1], 880.0, 448.0)

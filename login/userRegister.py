@@ -6,20 +6,15 @@ from tkinter import messagebox as mb
 import sys
 import subprocess
 
-# Obtener la ruta del directorio actual del script para abrir los demás archivos
 script_dir = os.path.dirname(__file__)
 
-# Obtenemos la ruta del archivo actual
 CURRENT_DIR = Path(__file__).resolve().parent
 
-# Definimos la parte relativa de la ruta en donde se encuentran los assets
 RELATIVE_PATH = Path("../assets/userRegister")
 
-# Combinamos la ruta actual con la parte relativa para obtener la ruta absoluta
 ASSETS_PATH = CURRENT_DIR / RELATIVE_PATH
 
 def relative_to_assets(path: str) -> Path:
-    # Combinamos la ruta de los assets con la ruta proporcionada
     return ASSETS_PATH / Path(path)
     
 #Función para agregar un nuevo usuario
@@ -34,30 +29,25 @@ def userRegister():
         db = sqlite3.connect('shopeasy.db')
         cursor = db.cursor()
         cursor.execute("INSERT INTO usuarios VALUES (?,?,?,?)",(cedula, nombre, password, "Usuario"))
-        #Ejecuto la SQL Consult
         db.commit()
         mb.showinfo(title="Usuario Creado Correctamente", message="El usuario ha sido creado correctamente dentro de la base de datos")
 
-        # Construir la ruta al archivo userLogin.py
         user_login_path = os.path.join(script_dir, "userLogin.py")
         subprocess.Popen(['python', user_login_path])
         sys.exit(0)
 
 def userLogin():
-    # Construir la ruta al archivo userLogin.py
     user_login_path = os.path.join(script_dir, "userLogin.py")
     subprocess.Popen(['python', user_login_path])
     sys.exit(0)
 
 def adminLogin():
-    # Construir la ruta al archivo userLogin.py
     user_login_path = os.path.join(script_dir, "adminLogin.py")
     subprocess.Popen(['python', user_login_path])
     sys.exit(0)
 
 window = Tk()
 
-#Definimos dimensiones, nombre de la ventana, favicon y background-color
 window.geometry("1137x639")
 window.title("ShopEasy")
 window.iconbitmap('assets/main/shopEasyLogo.ico')

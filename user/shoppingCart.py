@@ -12,37 +12,26 @@ import json
 cartProducts_str = sys.argv[1]
 cedula = sys.argv[2]
 
-# Convert the string to a list of dictionaries
 cartProducts = ast.literal_eval(cartProducts_str)
 
-# Obtener la ruta del directorio actual del script para abrir los demás archivos
 script_dir = os.path.dirname(__file__)
 
-# Obtenemos la ruta del archivo actual
 CURRENT_DIR = Path(__file__).resolve().parent
 
-# Definimos la parte relativa de la ruta en donde se encuentran los assets
 RELATIVE_PATH = Path("../assets/shoppingCart")
 RELATIVE_PATH2 = Path("../images")
 
-# Combinamos la ruta actual con la parte relativa para obtener la ruta absoluta
 ASSETS_PATH = CURRENT_DIR / RELATIVE_PATH
 IMAGES_PATH = CURRENT_DIR / RELATIVE_PATH2
 
 def relative_to_assets(path: str) -> Path:
-    # Combinamos la ruta de los assets con la ruta proporcionada
     return ASSETS_PATH / Path(path)
 
 def relative_to_images(path: str) -> Path:
-    # Combinamos la ruta de los assets con la ruta proporcionada
     return IMAGES_PATH / Path(path)
-
-# Obtener la ruta del directorio actual del script para abrir los demás archivos
-script_dir = os.path.dirname(__file__)
 
 window = Tk()
 
-#Definimos dimensiones, nombre de la ventana, favicon y background-color
 window.geometry("1137x639")
 window.title("ShopEasy")
 window.iconbitmap('assets/main/shopEasyLogo.ico')
@@ -89,33 +78,26 @@ def createPrice(text, x, y):
     )
 
 def openCatalog():
-    # Construir la ruta al archivo userDashboard.py
     dashboard_path = os.path.join(script_dir, "userDashboard.py")
-    # Convert the list of dictionaries to a string
     cartProducts_str = json.dumps(cartProducts)
-    #Se pasa como parametro la cedula para obtener el nombre
     subprocess.Popen(['python', dashboard_path, cedula, cartProducts_str])
     sys.exit(0)
 
 def calculateTotal(subtotalText, ivaText, totalText):
     subtotalAcumulator = 0
 
-    #Recorremos los productos y actualizamos el acumulador
     for i in cartProducts:
         subtotalIndividual = int(i["Subtotal"])
         subtotalAcumulator += subtotalIndividual
 
-    #Calculamos el iva y el total a pagar
     iva = round(subtotalAcumulator * 0.19)
     total = round(subtotalAcumulator + iva)
 
-    #Actualizamos el texto del elemento
     canvas.itemconfig(subtotalText, text=f"Subtotal: ${subtotalAcumulator}")
     canvas.itemconfig(ivaText, text=f"Iva: ${iva}")
     canvas.itemconfig(totalText, text=f"Total: ${total}")
 
 def updateProduct(product, action, counter, individualSubtotal, subtotalText, ivaText, totalText):
-    #Obtenemos el valor de la cantidad y la actualizamos dependiendo de la acción
     quantity = int(product["Cantidad"])
     stock = int(product["Stock"])
     precioUnitario = int(product["Precio Unitario"])
@@ -125,17 +107,13 @@ def updateProduct(product, action, counter, individualSubtotal, subtotalText, iv
     elif quantity > 1 and quantity <= stock and action == "minus":
         quantity -= 1
 
-    #Actualizamos el texto de la ventana
     canvas.itemconfig(counter, text=str(quantity))
 
-    #Obtenemos el indice del objeto para actualizarlo
     index = cartProducts.index(product)
 
-    #Calculamos el subtotal individual
     individualSubtotalValue = precioUnitario * quantity
     canvas.itemconfig(individualSubtotal, text=f"${str(individualSubtotalValue)}")
 
-    #Actualizamos la variable cantidad y el producto del carrito
     product["Cantidad"] = quantity
     product["Subtotal"] = individualSubtotalValue
     cartProducts[index] = product
@@ -143,30 +121,21 @@ def updateProduct(product, action, counter, individualSubtotal, subtotalText, iv
     calculateTotal(subtotalText, ivaText, totalText)
 
 def buyShoppingCart(totalText):
-    #Validamos que hayan productos en el carrito
     if len(cartProducts) > 0:
-        #Validamos de que la venta quiera realizarse
         answer = mb.askquestion(title="Confirmación de Compra", message="¿Desea efectuar la compra de su carrito?")
 
         if answer == "yes":
-            #Para la venta se necesita el nombre del usuario, total a pagar, fecha y la lista de los productos 
-            
-            #Obtenemos el nombre a partir de la cedula
             db = sqlite3.connect('shopeasy.db')
             cursor = db.cursor()
             cursor.execute("SELECT * FROM usuarios WHERE cedula=? AND tipo=?", (cedula, "Usuario"))
             user = cursor.fetchone()
-            #Retornamos el nombre del usuario que tenga esa cedula
             username = user[1]
 
-            #Obtenemos los demás elementos
             shoppingCartTotal = canvas.itemcget(totalText, 'text')
             shoppingCartTotal = shoppingCartTotal[7:]
 
-            # Obtener la fecha y hora actual
             actualDate = datetime.now()
 
-            # Formatear la fecha y hora en el formato deseado
             formattedDate = actualDate.strftime("%d/%m/%Y %H:%M")
 
             sale = {
@@ -176,11 +145,11 @@ def buyShoppingCart(totalText):
                 "Productos": cartProducts
             }
 
-            # Convertir el diccionario a una cadena JSON
+            subtotal = round(float(sale["Total"][1:]) / 1.19)
+
             sale_str = json.dumps(sale)
             cart_str = json.dumps(cartProducts)
 
-            #Antes de enviar al usuario a invoice.py se debe de efectuar los cambios en el inventario especificamente en la cantidad
             for i in cartProducts:
                 productName = i["Nombre"]
                 productUnitaryPrice = float(i["Precio Unitario"])
@@ -188,13 +157,22 @@ def buyShoppingCart(totalText):
                 productImage = i["Imagen"]
                 newStock = productStock-i["Cantidad"]
 
-                #Hacemos un update a la cantidad
                 db = sqlite3.connect('shopeasy.db')
                 cursor = db.cursor()
                 cursor.execute("UPDATE productos SET stock = ? WHERE nombre=? AND stock=? AND precio=? AND imagen=?", (newStock, productName, productStock, productUnitaryPrice, productImage))
                 db.commit()
 
-            # Construir la ruta al archivo invoice.py
+            productsName = ""
+
+            for i, product in enumerate(cartProducts):
+                productsName += product["Nombre"]
+                if i < len(cartProducts) - 1:
+                    productsName += ","
+
+            cursor = db.cursor()
+            cursor.execute("INSERT INTO ventas ('usuario', 'productos', 'subtotal', 'fecha', 'total') VALUES (?,?,?,?,?)", (username, productsName, subtotal, formattedDate, sale["Total"][1:]))
+            db.commit()
+            
             invoice_path = os.path.join(script_dir, "invoice.py")
             #Se pasa como parametro la venta y el carrito vació
             subprocess.Popen(['python', invoice_path, sale_str, "[]", cedula])
@@ -206,7 +184,6 @@ def buyShoppingCart(totalText):
         mb.showerror(title="Error", message="Todavía no se ha agregado ningun producto al carrito de compras")
     
 def deleteProduct(product):
-    #Validamos que se quiera eliminar
     answer = mb.askquestion(title="Eliminar Producto", message="¿Desea eliminar el producto de su carrito?")
 
     if answer == "yes":

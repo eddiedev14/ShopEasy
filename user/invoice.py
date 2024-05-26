@@ -12,29 +12,21 @@ sale_str = sys.argv[1]
 cart_str = sys.argv[2]
 cedula = sys.argv[3]
 
-# Convert the string to a list of dictionaries
 sale = ast.literal_eval(sale_str)
 
-# Obtener la ruta del directorio actual del script para abrir los demás archivos
 script_dir = os.path.dirname(__file__)
 
-# Obtenemos la ruta del archivo actual
 CURRENT_DIR = Path(__file__).resolve().parent
 
-# Definimos la parte relativa de la ruta en donde se encuentran los assets
 RELATIVE_PATH = Path("../assets/invoice")
 
-# Combinamos la ruta actual con la parte relativa para obtener la ruta absoluta
 ASSETS_PATH = CURRENT_DIR / RELATIVE_PATH
 
 def relative_to_assets(path: str) -> Path:
-    # Combinamos la ruta de los assets con la ruta proporcionada
     return ASSETS_PATH / Path(path)
 
 def openShoppingCart():
-    # Construir la ruta al archivo invoice.py
     invoice_path = os.path.join(script_dir, "shoppingCart.py")
-    #Se pasa como parametro la venta
     subprocess.Popen(['python', invoice_path, cart_str, cedula])
     sys.exit(0)
 
@@ -58,32 +50,25 @@ def createTableText(x, y, text):
     )
 
 def generatePDF():
-    #Trabajamos con POO para crear un objeto de la clase PDF con unos métodos definidos
     class PDF(FPDF):
         def header(self):
-            # Logo
             self.image('assets/Logo.png', 10, 8, 33)
-            # Título
             self.set_font('Arial', 'B', 24)
             self.cell(0, 10, 'Facturación', 0, 1, 'C')
             self.ln(10)
 
         def footer(self):
-            # Número de página
             self.set_y(-15)
             self.set_font('Arial', 'I', 8)
             self.cell(0, 10, 'Página ' + str(self.page_no()), 0, 0, 'C')
 
-    # Crear instancia de PDF
     pdf = PDF()
     pdf.add_page()
 
-    # Agregar texto
     pdf.set_font('Arial', 'B', 12)
     pdf.cell(0, 10, f'Usuario: {sale["Usuario"]}', 0, 1)
     pdf.cell(0, 10, f'Fecha: {sale["Fecha"]}', 0, 1)
 
-    # Agregar tabla
     pdf.set_font('Arial', 'B', 12)
     pdf.cell(35, 10, 'N°', 1)
     pdf.cell(35, 10, 'Nombre', 1)
@@ -92,7 +77,6 @@ def generatePDF():
     pdf.cell(35, 10, 'Subtotal', 1)
     pdf.ln()
 
-    # Agregar filas a la tabla
     pdf.set_font('Arial', '', 12)
 
     acumulator = 0
@@ -106,7 +90,6 @@ def generatePDF():
         pdf.cell(35, 10, str(row["Subtotal"]), 1)
         pdf.ln()
 
-    #Mostramos información final
     total = sale["Total"]
     total = int(total[1:])
     subtotal = round(total / 1.19)
@@ -117,14 +100,12 @@ def generatePDF():
     pdf.cell(0, 10, f'IVA: {str(iva)} COP', 0, 1)
     pdf.cell(0, 10, f'Total: {str(total)} COP', 0, 1)
 
-    # Ruta de guardado del PDF en la carpeta de descargas
     file_path = os.path.join(os.path.expanduser("~"), "Downloads", "facturacion.pdf")
     pdf.output(file_path)
     mb.showinfo(title="PDF Generado", message="El PDF ha sido creado correctamente en la carpeta Descargas")
 
 window = Tk()
 
-#Definimos dimensiones, nombre de la ventana, favicon y background-color
 window.geometry("1137x639")
 window.title("ShopEasy")
 window.iconbitmap('assets/main/shopEasyLogo.ico')
